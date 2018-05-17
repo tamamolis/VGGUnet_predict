@@ -90,33 +90,28 @@ def concat(path, path_save):
 def delete_img(path):
     files = os.listdir(path)
     for file in files:
-        img = cv2.imread(path + file)
-        if np.shape(img) == (416, 608, 3):
-            os.remove(path + file)
+        os.remove(path + file)
     return 0
 
 
-def big_image_from_small_image(path_crop, path_save):
-    crop_arr = []
+def delete_res_img(path):
+    k = number_of_splices(path) - 1
+    files = os.listdir(path)
+    for file in files:
+        if file[:1] != str(k):
+            print(file[:1], str(k))
+            os.remove(path + file)
 
+
+def number_of_splices(path_crop):
+    crop_arr = []
     files = os.listdir(path_crop)
+    n = len(files)
+    print(n, files[n-1])
+    k = int(files[n-1][:1]) + 1
+    print(k)
     files.sort()
     print(files)
-
-    for file in files:
-        crop_arr.append(cv2.imread(path_crop + file))
-
-    arr = np.zeros((3, 4, 416, 608, 3))
-    k = 0
-    for i in range(3):
-        for j in range(4):
-            arr[i][j] = crop_arr[k]
-            k += 1
-
-    crop_arr = np.reshape(crop_arr, (608*3, 416*4, 3))
-    arr = np.reshape(arr, (416*3, 608*4, 3))
-    rgb = array_to_img(arr)
-    rgb.save(path_save + 'res.png')
-    # cv2.imwrite(path_save + 'res.png', crop_arr)
+    return k
 
 

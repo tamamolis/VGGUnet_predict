@@ -66,10 +66,10 @@ def getImageArr(path, width, height, imgNorm="sub_mean", odering='channels_first
         return img
 
 
-def create_predict():
+def create_predict(images_path, output_path, input_height, input_width, n_classes, save_weights_path):
     set_keras_backend("theano")
     m, output_width, output_height = VGGUnet(7, vgg_level=3)
-    m.load_weights(save_weights_path + "weights.best.hdf5")
+    m.load_weights(save_weights_path)
     m.compile(loss='categorical_crossentropy',
               optimizer='adadelta',
               metrics=['accuracy'])

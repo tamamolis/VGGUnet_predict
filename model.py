@@ -1,11 +1,12 @@
 from keras.models import *
 from keras.layers import *
 import importlib
+import os
 
 from keras import backend as K
 K.set_image_dim_ordering('th')
 
-VGG_Weights_path = "weights/vgg16_weights_th_dim_ordering_th_kernels.h5"
+VGG_Weights_path = os.getcwd() + "/weights/vgg16_weights_th_dim_ordering_th_kernels.h5"
 IMAGE_ORDERING = 'channels_first'
 
 input_height = 416
