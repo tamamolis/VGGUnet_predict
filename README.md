@@ -1,5 +1,5 @@
 ## seasonReport
-### season report for work
+### how to use
 
 - кладём оригинал картинки в папку orig
 - в папке orig может быть только одна картинка!
