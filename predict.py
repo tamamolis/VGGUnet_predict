@@ -2,6 +2,7 @@ import glob
 import numpy as np
 import cv2
 from model import set_keras_backend, VGGUnet
+import keras.models as models
 
 Building = [0, 0, 255]
 Grass = [0, 255, 0]
@@ -14,7 +15,7 @@ Unlabelled = [255, 0, 0]
 colors = np.array([Building, Grass, Development, Concrete, Roads, NotAirplanes, Unlabelled])
 
 n_classes = 7
-save_weights_path = 'weights/VGGSegNet/'
+save_weights_path = 'weights/weights.best.hdf5'
 images_path = 'data/res/'
 input_width = 416
 input_height = 608
@@ -68,7 +69,13 @@ def getImageArr(path, width, height, imgNorm="sub_mean", odering='channels_first
 
 def create_predict(images_path, output_path, input_height, input_width, n_classes, save_weights_path):
     set_keras_backend("theano")
-    m, output_width, output_height = VGGUnet(7, vgg_level=3)
+
+    # with open('VGGsegNet.json') as model_file:
+    #     m = models.model_from_json(model_file.read())
+
+    m = models.load_model('VGGsegNet.h5')
+    output_width = 304
+    output_height = 208
     m.load_weights(save_weights_path)
     m.compile(loss='categorical_crossentropy',
               optimizer='adadelta',

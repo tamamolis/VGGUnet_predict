@@ -6,7 +6,6 @@
 import os
 import cv2
 import numpy as np
-from keras.preprocessing.image import array_to_img
 
 h = 416
 w = 608
@@ -115,3 +114,8 @@ def number_of_splices(path_crop):
     return k
 
 
+def rename_final_image(path):
+    files = os.listdir(path)
+    for filename in files:
+        print('new name: ', filename[-10:])
+        os.rename(os.getcwd() + '/data/img/' + filename, os.getcwd() + '/data/img/' + filename[-10:])

@@ -108,4 +108,19 @@ def VGGUnet(n_classes, vgg_level=3):
     model.outputWidth = output_width
     model.outputHeight = output_height
 
+    with open('VGGsegNet.json', 'w') as outfile:
+        outfile.write(json.dumps(json.loads(model.to_json()), indent=2))
+
+    model.compile(loss='categorical_crossentropy',
+              optimizer='adadelta',
+              metrics=['accuracy'])
+
+    model.save('VGGsegNet.h5')
+
     return model, output_width, output_height
+
+
+if __name__ == '__main__':
+    set_keras_backend("theano")
+    m, output_width, output_height = VGGUnet(7, vgg_level=3)
+    print("output: ", output_height, output_width)

@@ -1,5 +1,5 @@
 import os
-from merge_img import crop, concat, number_of_splices, delete_img, delete_res_img
+from merge_img import crop, concat, number_of_splices, delete_img, delete_res_img, rename_final_image
 from predict import create_predict
 
 
@@ -37,3 +37,4 @@ if __name__ == '__main__':
     delete_img(path_crop)
     delete_img(path_save)
     delete_res_img(path_img)
+    rename_final_image(path_img)
