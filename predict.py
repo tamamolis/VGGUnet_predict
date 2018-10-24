@@ -15,12 +15,19 @@ Unlabelled = [255, 0, 0]
 colors = np.array([Building, Grass, Development, Concrete, Roads, NotAirplanes, Unlabelled])
 
 n_classes = 7
-save_weights_path = 'weights/weights.best.hdf5'
 images_path = 'data/res/'
 input_width = 416
 input_height = 608
 output_path = 'imgs_results/res7/'
 DataPath = 'data/'
+
+
+def histogram_equalize(img):
+    b, g, r = cv2.split(img)
+    red = cv2.equalizeHist(r)
+    green = cv2.equalizeHist(g)
+    blue = cv2.equalizeHist(b)
+    return cv2.merge((blue, green, red))
 
 
 def visualize(temp):
@@ -67,7 +74,7 @@ def getImageArr(path, width, height, imgNorm="sub_mean", odering='channels_first
         return img
 
 
-def create_predict(images_path, output_path, input_height, input_width, n_classes, save_weights_path):
+def create_predict(images_path, output_path, input_height, input_width, save_weights_path, n_classes=7):
     set_keras_backend("theano")
 
     # with open('VGGsegNet.json') as model_file:
@@ -86,6 +93,11 @@ def create_predict(images_path, output_path, input_height, input_width, n_classe
 
     i = 0
     for imgName in images:
+
+        # img = cv2.imread(imgName)
+        # print(imgName)
+        # hist_img = histogram_equalize(img)
+        # cv2.imwrite(imgName, hist_img)
 
         outName = imgName.replace(images_path, output_path)
         X = getImageArr(imgName, input_height, input_width)
