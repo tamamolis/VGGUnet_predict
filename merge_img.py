@@ -103,7 +103,6 @@ def delete_res_img(path):
 
 
 def number_of_splices(path_crop):
-    crop_arr = []
     files = os.listdir(path_crop)
     n = len(files)
     print(n, files[n-1])

@@ -1,7 +1,7 @@
 import cv2
 import os
 import numpy as np
-from  predict import create_predict
+from predict import create_predict
 
 
 h = 416
@@ -106,13 +106,20 @@ def crop_small_image(img, path_save, step_x, step_y):
     return 0
 
 
+def find_index(file):
+    index = file.split("_")[0]
+    # print('file: ', index)
+    return int(index)
+
+
 def merge_im(path, path_save, step_x, step_y, axis, flag):
     files = os.listdir(path)
+    files.sort()
     if axis == 1:
         for i in range(len(files)):
             try:
-                index = files[i][:1]
-                index_next = files[i + 1][:1]
+                index = find_index(files[i]) # исправила
+                index_next = find_index(files[i + 1]) # исправила
 
                 if index == index_next:
                     # print(index, index_next)
@@ -162,33 +169,27 @@ def number_of_splices(path_crop):
 
 if __name__ == '__main__':
 
-    os.system("find /Users/kate/PycharmProjects/seasonReport -name '.DS_Store' -delete")
-    path = DataPath + 'orig/'
-    path_save = DataPath + 'crop/'
+    os.system("find /Users/kate/PycharmProjects/VGGUnet-predict -name '.DS_Store' -delete")
+    step_x = 14
+    step_y = 7
 
-    step_x, step_y = sliding_window(path, path_save)
+    path = DataPath + 'gross_color_balance_pred/'
+    path_save = DataPath + 'img/'
 
-    weights_path = os.getcwd() + '/weights/VGGUnet.weights.best.hdf5'
-    create_predict(path_save, path_save, w, h, weights_path)
-
-    path = DataPath + 'crop/'
-    path_save = DataPath + 'res/'
-
-    merge_im(path, path_save, step_x, step_y, 1, True)
-    k = number_of_splices(path_save)
-    for i in range(k):
+    # merge_im(path, path_save, step_x, step_y, 1, True)
+    k = number_of_splices(path)
+    for i in range(k + 1):
         merge_im(path, path_save, step_x, step_y, 1, False)
 
     print("теперь по вертикали!\n")
 
-    path = DataPath + 'crop/'
+    path = DataPath + 'gross_color_balance_pred/'
     path_save = DataPath + 'img/'
 
-    # merge_im(path, path_save, step_x, step_y, 0, False)
+    merge_im(path, path_save, step_x, step_y, 0, False)
     files = os.listdir(path)
 
     while len(files) > 1:
         merge_im(path, path, step_x, step_y, 0, False)
         files = os.listdir(path)
-
-    # delete_img(path_save)
+        os.system("find /Users/kate/PycharmProjects/VGGUnet-predict -name '.DS_Store' -delete")

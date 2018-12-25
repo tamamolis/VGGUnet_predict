@@ -3,8 +3,8 @@ import pydensecrf.densecrf as dcrf
 from skimage.io import imread, imsave
 from pydensecrf.utils import unary_from_labels
 from skimage.color import gray2rgb
-from skimage.color import rgb2gray
-import cv2
+import os
+import cv2 as cv
 
 Building = [0, 0, 255]
 Grass = [0, 255, 0]
@@ -37,13 +37,14 @@ def visualize(temp):
     return rgb
 
 
-def euclidean_metric(input):
-    #  сумма модулей разности
+def euclidean_metric(inp):
+    # евклидова метрика
     total = 100000
     index = -1
 
     for legend in legend_list:
-        new_total = abs(input[0] - legend[0]) + abs(input[1] - legend[1]) + abs(input[2] - legend[2])
+        new_total = np.linalg.norm(np.array(legend) - inp)
+        # print(new_total)
         if new_total < total:
             total = new_total
             index = legend_list.index(legend)
@@ -99,13 +100,21 @@ def crf(original_image, annotated_image, output_image, use_2d=True):
         U = unary_from_labels(labels, n_labels, gt_prob=0.7, zero_unsure=False)
         d.setUnaryEnergy(U)
 
-        d.addPairwiseGaussian(sxy=(3, 3), compat=3, kernel=dcrf.DIAG_KERNEL,
+        d.addPairwiseGaussian(sxy=(1, 1), compat=3, kernel=dcrf.DIAG_KERNEL,
                               normalization=dcrf.NORMALIZE_SYMMETRIC)
 
-        d.addPairwiseBilateral(sxy=(80, 80), srgb=(13, 13, 13), rgbim=original_image,
+        d.addPairwiseBilateral(sxy=(30, 30), srgb=(13, 13, 13), rgbim=original_image,
                                compat=10,
                                kernel=dcrf.DIAG_KERNEL,
                                normalization=dcrf.NORMALIZE_SYMMETRIC)
+
+        # d.addPairwiseGaussian(sxy=(3, 3), compat=3, kernel=dcrf.DIAG_KERNEL,
+        #                       normalization=dcrf.NORMALIZE_SYMMETRIC)
+        #
+        # d.addPairwiseBilateral(sxy=(80, 80), srgb=(13, 13, 13), rgbim=original_image,
+        #                        compat=10,
+        #                        kernel=dcrf.DIAG_KERNEL,
+        #                        normalization=dcrf.NORMALIZE_SYMMETRIC)
 
     Q = d.inference(5)
     MAP = np.argmax(Q, axis=0)
@@ -118,12 +127,26 @@ def crf(original_image, annotated_image, output_image, use_2d=True):
     imsave(output_image, rgb)
 
 
-if __name__ == '__main__':
+def stretch(path, path_save):
+    files = os.listdir(path)
+    for file in files:
+        img = cv.imread(path + file)
+        print(path + file)
+        res = cv.resize(img, None, fx=2, fy=2, interpolation=cv.INTER_CUBIC)
+        # height, width = img.shape[:2]
+        # res = cv.resize(img, (2 * width, 2 * height), interpolation=cv.INTER_CUBIC)
+        name = 'resize.png'
+        path_save = path_save + name
+        cv.imwrite(path_save, res)
 
-    orig = 'data/orig/pulkovo.jpg'
-    seg = 'data/crop/0_0.png'
 
-    image = imread(orig)
-    seg_image = imread(seg)
+def crop_orig(path_orig, path_seg):
+    img = cv.imread(path_seg + 'resize.png')
+    print(path_seg + 'resize.png')
+    h, w, c = img.shape
+    print(h, w, c)
 
-    crf(image, seg_image, "data/img/result_crf.jpg")
+    files_orig = os.listdir(path_orig)
+    img_orig = cv.imread(path_orig + files_orig[0])
+    crop_img = img_orig[0: h, 0: w]
+    cv.imwrite(path_seg + 'crop.png', crop_img)
