@@ -6,20 +6,25 @@ import keras.models as models
 
 Building = [0, 0, 255]
 Grass = [0, 255, 0]
-Development = [255, 255, 0]  # стройка
+Development = [0, 255, 255]  # стройка, было [255, 255, 0], тогда оно красилось ГОЛУБЫМ!!!
 Concrete = [255, 255, 255]  # бетон
 Roads = [0, 255, 255]
 NotAirplanes = [252, 40, 252]
 Unlabelled = [255, 0, 0]
 
-colors = np.array([Building, Grass, Development, Concrete, Roads, NotAirplanes, Unlabelled])
-
-n_classes = 7
+n_classes = 5  # было 7
 images_path = 'data/res/'
 input_width = 416
 input_height = 608
 output_path = 'imgs_results/res7/'
 DataPath = 'data/'
+
+model = 'VGGsegNet_n' + str(n_classes) + 'classes.h5'
+
+if n_classes == 7:
+    colors = np.array([Building, Grass, Development, Concrete, Roads, NotAirplanes, Unlabelled])
+elif n_classes == 5:
+    colors = np.array([Development, Grass, Concrete, Unlabelled, Building])
 
 
 def histogram_equalize(img):
@@ -34,7 +39,7 @@ def visualize(temp):
     r = temp.copy()
     g = temp.copy()
     b = temp.copy()
-    for l in range(0, 7):
+    for l in range(0, n_classes - 1):
         r[temp == l] = colors[l, 0]
         g[temp == l] = colors[l, 1]
         b[temp == l] = colors[l, 2]
@@ -74,13 +79,14 @@ def getImageArr(path, width, height, imgNorm="sub_mean", odering='channels_first
         return img
 
 
-def create_predict(images_path, output_path, input_height, input_width, save_weights_path, n_classes=7):
+def create_predict(images_path, output_path, input_height, input_width, save_weights_path, n_classes):
     set_keras_backend("theano")
 
     # with open('VGGsegNet.json') as model_file:
     #     m = models.model_from_json(model_file.read())
 
-    m = models.load_model('VGGsegNet.h5')
+    print(model)
+    m = models.load_model(model)
     output_width = 304
     output_height = 208
     m.load_weights(save_weights_path)

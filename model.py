@@ -2,6 +2,7 @@ from keras.models import *
 from keras.layers import *
 import importlib
 import os
+import json
 
 from keras import backend as K
 K.set_image_dim_ordering('th')
@@ -11,6 +12,8 @@ IMAGE_ORDERING = 'channels_first'
 
 input_height = 416
 input_width = 608
+n_classes = 5
+n_channels = 3
 
 
 def set_keras_backend(backend):
@@ -24,7 +27,7 @@ def VGGUnet(n_classes, vgg_level=3):
     assert input_height % 32 == 0
     assert input_width % 32 == 0
 
-    img_input = Input(shape=(3, input_height, input_width))
+    img_input = Input(shape=(n_channels, input_height, input_width))
 
     x = Conv2D(64, (3, 3), activation='relu', padding='same', name='block1_conv1', data_format=IMAGE_ORDERING)(
         img_input)
@@ -108,19 +111,19 @@ def VGGUnet(n_classes, vgg_level=3):
     model.outputWidth = output_width
     model.outputHeight = output_height
 
-    with open('VGGsegNet.json', 'w') as outfile:
+    with open('VGG-Unet_n' + str(n_classes) + 'classes.json', 'w') as outfile:
         outfile.write(json.dumps(json.loads(model.to_json()), indent=2))
 
     model.compile(loss='categorical_crossentropy',
               optimizer='adadelta',
               metrics=['accuracy'])
 
-    model.save('VGGsegNet.h5')
+    model.save('VGGsegNet_n' + str(n_classes) + 'classes.h5')
 
     return model, output_width, output_height
 
 
 if __name__ == '__main__':
     set_keras_backend("theano")
-    m, output_width, output_height = VGGUnet(7, vgg_level=3)
+    m, output_width, output_height = VGGUnet(n_classes, vgg_level=3)
     print("output: ", output_height, output_width)

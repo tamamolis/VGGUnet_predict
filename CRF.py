@@ -14,18 +14,23 @@ Roads = [0, 255, 255]
 NotAirplanes = [252, 0, 252]
 Unlabelled = [255, 0, 0]
 
-legend_list = [Building, Grass, Development, Concrete, Roads, NotAirplanes, Unlabelled]
-
 height = 416
 width = 608
+n_classes = 5
+
+if n_classes == 7:
+    legend_list = [Building, Grass, Development, Concrete, Roads, NotAirplanes, Unlabelled]
+elif n_classes == 5:
+    legend_list = [Development, Grass, Concrete, Unlabelled, Building]
+
 
 
 def visualize(temp):
-    color = np.array([Building, Grass, Development, Concrete, Roads, NotAirplanes, Unlabelled])
+    color = np.array([Building, Grass, Development, Concrete, Unlabelled])
     r = temp.copy()
     g = temp.copy()
     b = temp.copy()
-    for l in range(0, 7):
+    for l in range(0, n_classes):
         r[temp == l] = color[l, 0]
         g[temp == l] = color[l, 1]
         b[temp == l] = color[l, 2]
@@ -77,7 +82,7 @@ def crf(original_image, annotated_image, output_image, use_2d=True):
     print(np.shape(annotated_image))
     colors, labels = np.unique(annotated_label, return_inverse=True)
 
-    colors = np.array([0, 1, 2, 3, 4, 5, 6])
+    colors = np.array([0, 1, 2, 3, 4]) # было до 6!
     print(colors)
     colorize = np.empty((len(colors), 3), np.uint8)
     colorize[:, 0] = (colors & 0x0000FF)
@@ -100,10 +105,12 @@ def crf(original_image, annotated_image, output_image, use_2d=True):
         U = unary_from_labels(labels, n_labels, gt_prob=0.7, zero_unsure=False)
         d.setUnaryEnergy(U)
 
-        d.addPairwiseGaussian(sxy=(1, 1), compat=3, kernel=dcrf.DIAG_KERNEL,
+        # This adds the color-independent term, features are the locations only.
+        d.addPairwiseGaussian(sxy=(3, 3), compat=3, kernel=dcrf.DIAG_KERNEL,
                               normalization=dcrf.NORMALIZE_SYMMETRIC)
 
-        d.addPairwiseBilateral(sxy=(30, 30), srgb=(13, 13, 13), rgbim=original_image,
+        # This adds the color-dependent term, i.e. features are (x,y,r,g,b).
+        d.addPairwiseBilateral(sxy=(80, 80), srgb=(13, 13, 13), rgbim=original_image,
                                compat=10,
                                kernel=dcrf.DIAG_KERNEL,
                                normalization=dcrf.NORMALIZE_SYMMETRIC)

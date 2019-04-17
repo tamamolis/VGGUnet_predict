@@ -114,7 +114,7 @@ def find_index(file):
 
 def merge_im(path, path_save, step_x, step_y, axis, flag):
     files = os.listdir(path)
-    files.sort()
+    # files.sort()
     if axis == 1:
         for i in range(len(files)):
             try:
@@ -170,26 +170,26 @@ def number_of_splices(path_crop):
 if __name__ == '__main__':
 
     os.system("find /Users/kate/PycharmProjects/VGGUnet-predict -name '.DS_Store' -delete")
-    step_x = 14
-    step_y = 7
+    step_x = 16
+    step_y = 28
 
-    path = DataPath + 'gross_color_balance_pred/'
-    path_save = DataPath + 'img/'
+    path = DataPath + 'crop/'
+    path_save = DataPath + 'crop/'
 
-    # merge_im(path, path_save, step_x, step_y, 1, True)
+    merge_im(path, path_save, step_x, step_y, 1, True)
     k = number_of_splices(path)
-    for i in range(k + 1):
+    for i in range(k):
         merge_im(path, path_save, step_x, step_y, 1, False)
 
     print("теперь по вертикали!\n")
 
-    path = DataPath + 'gross_color_balance_pred/'
-    path_save = DataPath + 'img/'
+    path = DataPath + 'crop/'
+    path_save = DataPath + 'crop/'
 
-    merge_im(path, path_save, step_x, step_y, 0, False)
-    files = os.listdir(path)
-
-    while len(files) > 1:
-        merge_im(path, path, step_x, step_y, 0, False)
-        files = os.listdir(path)
-        os.system("find /Users/kate/PycharmProjects/VGGUnet-predict -name '.DS_Store' -delete")
+    # merge_im(path, path_save, step_x, step_y, 0, False)
+    # files = os.listdir(path)
+    #
+    # while len(files) > 1:
+    #     merge_im(path, path, step_x, step_y, 0, False)
+    #     files = os.listdir(path)
+    #     os.system("find /Users/kate/PycharmProjects/VGGUnet-predict -name '.DS_Store' -delete")
