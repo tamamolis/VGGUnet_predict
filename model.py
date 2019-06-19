@@ -5,6 +5,7 @@ import os
 import json
 
 from keras import backend as K
+
 K.set_image_dim_ordering('th')
 
 VGG_Weights_path = os.getcwd() + "/weights/vgg16_weights_th_dim_ordering_th_kernels.h5"
@@ -21,6 +22,18 @@ def set_keras_backend(backend):
         os.environ['KERAS_BACKEND'] = backend
         importlib.reload(K)
         assert K.backend() == backend
+
+
+def dice_coef(y_true, y_pred, smooth=1e-7):
+    y_true_f = K.flatten(K.one_hot(K.cast(y_true, 'int32'), num_classes=n_classes)[..., 1:])
+    y_pred_f = K.flatten(y_pred[..., 1:])
+    intersect = K.sum(y_true_f * y_pred_f, axis=-1)
+    denom = K.sum(y_true_f + y_pred_f, axis=-1)
+    return K.mean((2. * intersect / (denom + smooth)))
+
+
+def dice_coef_loss(y_true, y_pred):
+    return 1 - dice_coef(y_true, y_pred)
 
 
 def VGGUnet(n_classes, vgg_level=3):
@@ -111,19 +124,23 @@ def VGGUnet(n_classes, vgg_level=3):
     model.outputWidth = output_width
     model.outputHeight = output_height
 
-    with open('VGG-Unet_n' + str(n_classes) + 'classes.json', 'w') as outfile:
-        outfile.write(json.dumps(json.loads(model.to_json()), indent=2))
-
-    model.compile(loss='categorical_crossentropy',
-              optimizer='adadelta',
-              metrics=['accuracy'])
-
-    model.save('VGGsegNet_n' + str(n_classes) + 'classes.h5')
+    # with open('VGG-Unet_n' + str(n_classes) + 'classes.json', 'w') as outfile:
+    #     outfile.write(json.dumps(json.loads(model.to_json()), indent=2))
+    #
+    # # model.compile(loss='categorical_crossentropy',
+    # #               optimizer='adadelta',
+    # #               metrics=['accuracy'])
+    #
+    # model.compile(loss=dice_coef,
+    #               optimizer='adadelta',
+    #               metrics=['accuracy'])
+    #
+    # model.save('VGG-UNet_n' + str(n_classes) + '_DL_classes.h5')
 
     return model, output_width, output_height
 
 
-if __name__ == '__main__':
-    set_keras_backend("theano")
-    m, output_width, output_height = VGGUnet(n_classes, vgg_level=3)
-    print("output: ", output_height, output_width)
+# if __name__ == '__main__':
+#     set_keras_backend("theano")
+#     m, output_width, output_height = VGGUnet(n_classes, vgg_level=3)
+#     print("output: ", output_height, output_width)

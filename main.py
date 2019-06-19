@@ -4,14 +4,13 @@ from predict import create_predict
 from CRF import crf, crop_orig, stretch
 from skimage.io import imread
 
-
 DataPath = os.getcwd() + '/data/'
 n_classes = 5
 w = 416
 h = 608
-# weights_path = os.getcwd() + '/weights/VGGUnet.7.weights.best.hdf5'
-weights_path = os.getcwd() + '/weights/VGGUnet.5.weights.best.hdf5'
-
+weights_path = os.getcwd() + '/weights/5_cl/CE/not_aug/weights.best.hdf5'
+# weights_path = os.getcwd() + '/weights/5_cl/DL/mult/weights.best.hdf5'
+# weights_path = os.getcwd() + '/weights/5_cl/FL/weights.best_.hdf5'
 
 if __name__ == '__main__':
 

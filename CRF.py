@@ -16,17 +16,14 @@ Unlabelled = [255, 0, 0]
 
 height = 416
 width = 608
-n_classes = 5
+n_classes = 7
 
-if n_classes == 7:
-    legend_list = [Building, Grass, Development, Concrete, Roads, NotAirplanes, Unlabelled]
-elif n_classes == 5:
-    legend_list = [Development, Grass, Concrete, Unlabelled, Building]
-
+legend_list = [Building, Grass, Development, Concrete, Roads, NotAirplanes, Unlabelled]
+# legend_list = [Development, Grass, Concrete, Unlabelled, Building]
 
 
 def visualize(temp):
-    color = np.array([Building, Grass, Development, Concrete, Unlabelled])
+    color = np.array([Building, Grass, Development, Concrete, Roads, NotAirplanes, Unlabelled])
     r = temp.copy()
     g = temp.copy()
     b = temp.copy()
@@ -106,29 +103,17 @@ def crf(original_image, annotated_image, output_image, use_2d=True):
         d.setUnaryEnergy(U)
 
         # This adds the color-independent term, features are the locations only.
-        d.addPairwiseGaussian(sxy=(3, 3), compat=3, kernel=dcrf.DIAG_KERNEL,
+        d.addPairwiseGaussian(sxy=(5, 5), compat=4, kernel=dcrf.DIAG_KERNEL,
                               normalization=dcrf.NORMALIZE_SYMMETRIC)
 
         # This adds the color-dependent term, i.e. features are (x,y,r,g,b).
-        d.addPairwiseBilateral(sxy=(80, 80), srgb=(13, 13, 13), rgbim=original_image,
-                               compat=10,
+        d.addPairwiseBilateral(sxy=(40, 40), srgb=(8, 8, 8), rgbim=original_image,
+                               compat=3,
                                kernel=dcrf.DIAG_KERNEL,
                                normalization=dcrf.NORMALIZE_SYMMETRIC)
 
-        # d.addPairwiseGaussian(sxy=(3, 3), compat=3, kernel=dcrf.DIAG_KERNEL,
-        #                       normalization=dcrf.NORMALIZE_SYMMETRIC)
-        #
-        # d.addPairwiseBilateral(sxy=(80, 80), srgb=(13, 13, 13), rgbim=original_image,
-        #                        compat=10,
-        #                        kernel=dcrf.DIAG_KERNEL,
-        #                        normalization=dcrf.NORMALIZE_SYMMETRIC)
-
     Q = d.inference(5)
     MAP = np.argmax(Q, axis=0)
-
-    # print(MAP)
-    # MAP = colorize[MAP, :]
-    # imsave(output_image, MAP.reshape(original_image.shape))
 
     rgb = visualize(MAP.reshape(np.shape(original_image)[0], np.shape(original_image)[1]))
     imsave(output_image, rgb)
@@ -157,3 +142,13 @@ def crop_orig(path_orig, path_seg):
     img_orig = cv.imread(path_orig + files_orig[0])
     crop_img = img_orig[0: h, 0: w]
     cv.imwrite(path_seg + 'crop.png', crop_img)
+
+
+if __name__ == '__main__':
+    orig = 'data/crop/crop.png'
+    seg = 'data/crop/resize.png'
+
+    image = imread(orig)
+    seg_image = imread(seg)
+
+    crf(image, seg_image, "data/crop/result_crf_3.jpg")

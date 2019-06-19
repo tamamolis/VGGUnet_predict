@@ -3,6 +3,7 @@ import numpy as np
 import cv2
 from model import set_keras_backend, VGGUnet
 import keras.models as models
+from keras import backend as K
 
 Building = [0, 0, 255]
 Grass = [0, 255, 0]
@@ -19,20 +20,45 @@ input_height = 608
 output_path = 'imgs_results/res7/'
 DataPath = 'data/'
 
-model = 'VGGsegNet_n' + str(n_classes) + 'classes.h5'
-
 if n_classes == 7:
     colors = np.array([Building, Grass, Development, Concrete, Roads, NotAirplanes, Unlabelled])
 elif n_classes == 5:
     colors = np.array([Development, Grass, Concrete, Unlabelled, Building])
 
+gamma = 2.0
+alpha = 0.25
 
-def histogram_equalize(img):
-    b, g, r = cv2.split(img)
-    red = cv2.equalizeHist(r)
-    green = cv2.equalizeHist(g)
-    blue = cv2.equalizeHist(b)
-    return cv2.merge((blue, green, red))
+
+def focal_loss(y_true, y_pred):
+    epsilon = K.epsilon()
+    y_pred = K.clip(y_pred, epsilon, 1.0 - epsilon)
+    cross_entropy = -y_true * K.log(y_pred)
+    weight = -alpha * y_true * K.pow((1 - y_pred), gamma)
+    loss = weight * cross_entropy
+    loss = K.sum(loss, axis=1)
+    return loss
+
+
+def categorical_focal_loss(y_true, y_pred):
+    focal = [0, 0, 0, 0, 0]
+    for index in range(n_classes):
+        focal = focal_loss(y_true[:, index, :], y_pred[:, index, :])
+    return focal
+
+
+def dice_coef(y_true, y_pred):
+    smooth = 1e-7
+    y_true_f = K.flatten(y_true)
+    y_pred_f = K.flatten(y_pred)
+    intersection = K.sum(y_true_f * y_pred_f)
+    return (2. * intersection + smooth) / (K.sum(y_true_f) + K.sum(y_pred_f) + smooth)
+
+
+def dice_coef_multilabel(y_true, y_pred):
+    dice = [0, 0, 0, 0, 0]
+    for index in range(n_classes):
+        dice += dice_coef(y_true[:, index, :], y_pred[:, index, :])
+    return dice
 
 
 def visualize(temp):
@@ -82,17 +108,20 @@ def getImageArr(path, width, height, imgNorm="sub_mean", odering='channels_first
 def create_predict(images_path, output_path, input_height, input_width, save_weights_path, n_classes):
     set_keras_backend("theano")
 
-    # with open('VGGsegNet.json') as model_file:
-    #     m = models.model_from_json(model_file.read())
-
-    print(model)
-    m = models.load_model(model)
-    output_width = 304
-    output_height = 208
+    m, output_width, output_height = VGGUnet(n_classes, vgg_level=3)
     m.load_weights(save_weights_path)
+
     m.compile(loss='categorical_crossentropy',
               optimizer='adadelta',
               metrics=['accuracy'])
+
+    # m.compile(loss=dice_coef_multilabel,
+    #           optimizer='adadelta',
+    #           metrics=['accuracy'])
+
+    # m.compile(loss=categorical_focal_loss, # 2.0 и 0.25 было
+    #           optimizer='adam',
+    #           metrics=['accuracy'])
 
     images = glob.glob(images_path + "*.png")
     images.sort()
@@ -100,14 +129,10 @@ def create_predict(images_path, output_path, input_height, input_width, save_wei
     i = 0
     for imgName in images:
 
-        # img = cv2.imread(imgName)
-        # print(imgName)
-        # hist_img = histogram_equalize(img)
-        # cv2.imwrite(imgName, hist_img)
-
         outName = imgName.replace(images_path, output_path)
         X = getImageArr(imgName, input_height, input_width)
         pr = m.predict(np.array([X]))[0]
+        print(pr[0])
         pr = pr.reshape((output_height, output_width, n_classes)).argmax(axis=2)
         seg_img = np.zeros((output_height, output_width, 3))
         for c in range(n_classes):
